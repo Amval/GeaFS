@@ -26,10 +26,11 @@ class MongoHandler:
         self.update = self.fs._GridFS__files.update
 
     def _open_file(self, path):
-        # abrir ficheros en modo binario
+        """ Abre el fichero especificado. Funcion de uso interno"""
         return open(path,'r+b')
 
     def write_file(self, path, status):
+        """ Escribe un fichero a la base de datos """
         try:
             file = self._open_file(path)
             self.fs.put(file, filename=path, status=status, user_id=self.user_id)
@@ -79,6 +80,8 @@ class MongoHandler:
             print("Name change not possible")
 
     def get_file(self, file):
+        # necesaria?
+        """ Devuelve el fichero especificado """
         try:
             return self.fs.get(file)
         except:
@@ -86,6 +89,7 @@ class MongoHandler:
 
     # Encuentra un fichero
     def get_one(self, query):
+        """ Busca y devuelve un fichero a partir de una consulta """
         try:
             results = self.fs.find(query).limit(1)
             for file in results:
@@ -115,8 +119,11 @@ class MongoHandler:
         except:
             return self.db.users.insert(user)
 
-    # Podria ir en MongoHandler. Refactoriza, hijo de puta
     def download_file(self,filename):
+        """ Descarga un fichero  y lo crea en el cliente.
+         Tambien crea el arbol de directorios que lo contiene,
+        en caso de ser necesario """
+
         path = filename.split("/")
         if len(path) > 2:
             path.pop()
@@ -133,6 +140,8 @@ class MongoHandler:
     def remove_file(self,filename):
         # Posible bug. No se si lo he arreglado o no he conseguido reproducirlo
         # A veces borraba la carpeta raiz, 'geafiles', al borrar subcarpetas
+        """ Borra un fichero del cliente y el arbol de directorios
+        que lo contiene, en caso de ser necesario. """
         try:
             os.remove(filename)
             path = filename.split("/")
@@ -147,16 +156,6 @@ class MongoHandler:
             print("File or path invalid")
         
         print("Eliminado: {0}".format(filename))
-
-    # Encuentra un fichero
-    def get_one(self, query):
-        try:
-            results = self.fs.find(query).limit(1)
-            for file in results:
-                return file
-        except:
-            print("File not Found")
-
 
 
 
