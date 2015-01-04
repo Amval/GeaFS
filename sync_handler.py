@@ -1,7 +1,7 @@
 import os
 import sys
 from datetime import datetime, timedelta
-import mongohandler as mh
+import mongo_handler as mh
 import hasher
 
 FILES_DIR = "geafiles"
@@ -9,14 +9,13 @@ FILES_DIR = "geafiles"
 
 class SyncHandler (mh.MongoHandler):
 
-	def __init__(self, db):
+	def __init__(self, username):
 
-		mh.MongoHandler.__init__(self,db)
+		mh.MongoHandler.__init__(self, username)
 		self.client_list =  self.list_client_files()
 		self.server_list =  self.list_server_files()
 
 	def list_client_files(self):
-		# MAL. Explorar subdirectorios
 		#paths = [os.path.join(FILES_DIR,fn) for fn in next(os.walk(FILES_DIR))[2]]
 		ordered_paths = []
 		paths = []
@@ -88,40 +87,13 @@ class SyncHandler (mh.MongoHandler):
 		for filename in client_files:
 			self.write_file(filename,"active")
 
-	def download_file(self,filename):
-		path = filename.split("/")
-		if len(path) > 2:
-			path.pop()
-			path = "/".join(path)
-			try:
-				os.makedirs(path)
-			except OSError:
-				print("Ignorando la creacion de {0} porque ya existe".format(path))
+	
 
-		db_file = self.get_one({"filename":filename})
-		with open(filename,"wb") as f_out:
-			f_out.write(db_file.read())
-
-	def remove_file(self,filename):
-		os.remove(filename)
-		path = filename.split("/")
-		if len(path) > 2:
-			path.pop()
-			path = "/".join(path)
-			try:
-				os.removedirs(path)
-			except OSError:
-				print("No es posible borrar el directorio {0} porque no esta vacio.".format(path))
-		
-		print("Eliminado: {0}".format(filename))
-
-
-
-sh = SyncHandler('geafs')
+#sh = SyncHandler('geafs','Alberto')
 #sh._eliminate_all()
 #print(sh.list_client)
-print(sh.server_list)
+#print(sh.server_list)
 #sh.compare_timestamps(list_client[0], myfile)
-client_files = sh.server_side_sync()
-sh.client_side_sync(client_files)
+#client_files = sh.server_side_sync()
+#sh.client_side_sync(client_files)
 
