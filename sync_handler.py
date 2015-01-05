@@ -120,7 +120,7 @@ class SyncHandler (mh.MongoHandler):
 
 	
 
-#sh = SyncHandler('geafs','Alberto')
+#sh = SyncHandler('Alberto')
 #sh._eliminate_all()
 #print(sh.list_client)
 #print(sh.server_list)

@@ -131,7 +131,7 @@ class MongoHandler:
             try:
                 os.makedirs(path)
             except OSError:
-                print("Ignorando la creacion de {0} porque ya existe".format(path))
+                print("The directory {0} already exists".format(path))
 
         db_file = self.get_one({"filename":filename})
         with open(filename,"wb") as f_out:
@@ -146,6 +146,7 @@ class MongoHandler:
             os.remove(filename)
             path = filename.split("/")
             if len(path) > 2:
+                print(path)
                 path.pop()
                 path = "/".join(path)
                 try:
@@ -153,9 +154,7 @@ class MongoHandler:
                 except OSError:
                     print("No es posible borrar el directorio {0} porque no esta vacio.".format(path))
         except: 
-            print("File or path invalid")
-        
-        print("Eliminado: {0}".format(filename))
+            print("Removing {0}. File doesn't exist already".format(filename))
 
 
 

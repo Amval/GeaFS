@@ -23,13 +23,17 @@ class OplogWatcher():
 	en el cliente sin tener que preguntar continuamente a la base de datos.
 	"""
 
-	def __init__(self):
+	def __init__(self, fw_oplog, ow_oplog):
 		# Conexion a la base de datos local, que contiene el oplog    
 		self.db = pymongo.MongoClient().local
 		# Conexion a la base de datos con la instancia de GridFS
 		self.fs = gridfs.GridFS(pymongo.MongoClient().geafs)
 
 		self.mongo_handler = mh.MongoHandler(USERNAME)
+
+		self.fw_oplog = fw_oplog
+		self.ow_oplog = ow_oplog
+
 		# Alias para GridFS
 		self.find_one = self.fs._GridFS__files.find_one
 		self.update = self.fs._GridFS__files.update
@@ -71,13 +75,10 @@ class OplogWatcher():
 		""" Procesa las operaciones del oplog """
 		# Identifica operacion de insercion
 		if doc["op"] == "i":
-			#print(doc["o"]["status"])
-			print("fichero creado")
 			self.download_file(doc["o"]["filename"])
 
 		# Operacion de borrado o actualizacion
 		else:
-			print(doc)
 			filename = self.find_one(doc["o2"]["_id"])["filename"]
 			if doc["o"]["$set"]["status"] == "deleted":
 				self.remove_file(filename)
@@ -86,7 +87,15 @@ class OplogWatcher():
 
 	def download_file(self,filename):
 		"""  Composicion del metodo del mismo nombre en MongoHandler """
-		self.mongo_handler.download_file(filename)
+		if filename in self.fw_oplog:
+			print("oplog: file exists already in the client")
+			self.fw_oplog.remove(filename)
+		else:
+			print("oplog: writing {0}".format(filename))
+			self.mongo_handler.download_file(filename)
+			self.ow_oplog.append(filename)
+			self.fw_oplog.append(filename)
+
 
 	def remove_file(self,filename):
 		"""  Composicion del metodo del mismo nombre en MongoHandler """
@@ -97,8 +106,5 @@ class OplogWatcher():
 		self.mongo_handler.get_one(query)
 		
 
-	
-
-
-oplog = OplogWatcher()
-oplog.tail_oplog()
+#oplog = OplogWatcher()
+#oplog.tail_oplog()
