@@ -6,6 +6,8 @@ import mongo_handler as mh
 from bson.timestamp import Timestamp
 import time
 import os
+from config import *
+
 
 USERNAME = "Alberto"
 
@@ -25,7 +27,9 @@ class OplogWatcher():
 
 	def __init__(self, fw_oplog, ow_oplog):
 		# Conexion a la base de datos local, que contiene el oplog    
-		self.db = pymongo.MongoClient().local
+		self.db = pymongo.MongoReplicaSetClient(HOSTS,replicaSet="rs0").local
+		self.db.read_preference = pymongo.ReadPreference.SECONDARY
+
 		# Conexion a la base de datos con la instancia de GridFS
 		self.fs = gridfs.GridFS(pymongo.MongoClient().geafs)
 

@@ -2,6 +2,9 @@ import pymongo
 import gridfs
 import os
 import sys
+import shutil
+from config import *
+
 # Escribir arquitectura del sistema en papel. Primitivas, clases, etc
 # connect to database
 
@@ -13,7 +16,9 @@ class MongoHandler:
         y crea alias para algunas operaciones """
 
         # conectar a la base de datos
-        self.db = pymongo.MongoClient().geafs
+        self.db = pymongo.MongoReplicaSetClient(HOSTS,replicaSet="rs0").geafs
+        self.db.read_preference = pymongo.ReadPreference.SECONDARY
+
         print('succesful connection to database')
 
         # crear instancia del sistema de ficheros
@@ -25,20 +30,24 @@ class MongoHandler:
         self.find_one = self.fs._GridFS__files.find_one
         self.update = self.fs._GridFS__files.update
 
-    def _open_file(self, path):
-        """ Abre el fichero especificado. Funcion de uso interno"""
-        return open(path,'r+b')
-
-    def write_file(self, path, status):
-        """ Escribe un fichero a la base de datos """
-        try:
-            file = self._open_file(path)
-            self.fs.put(file, filename=path, status=status, user_id=self.user_id)
-            print("File written: "+path)
-        except:
-            print("Unsupported type of file")
-
     
+
+    def write_file(self, path,status):
+
+        try:
+            file_object = self.fs.new_file(filename=path, status=status)
+            with open(path, "r+b") as f:
+                byte = f.read(255)
+                file_object.write(byte)
+                try:
+                    while byte:
+                        byte = f.read(255)
+                        file_object.write(byte)
+                finally:
+                    file_object.close()
+        except:
+            print("Unable to read file {0}".format(path))
+
     def eliminate(self,path):
         """ Elimina fisicamente el fichero de la base de datos.
         Funcion auxiliar no necesaria """
@@ -146,15 +155,28 @@ class MongoHandler:
             os.remove(filename)
             path = filename.split("/")
             if len(path) > 2:
-                print(path)
                 path.pop()
                 path = "/".join(path)
                 try:
+                    print(path)
                     os.removedirs(path)
                 except OSError:
-                    print("No es posible borrar el directorio {0} porque no esta vacio.".format(path))
+                    print("It's not posible to delete {0} directory because it's not empty.".format(path))
         except: 
             print("Removing {0}. File doesn't exist already".format(filename))
 
 
 
+    # deprecated
+    def _write_file(self, path, status):
+        """ Escribe un fichero a la base de datos """
+        try:
+            file = self._open_file(path)
+            self.fs.put(file, filename=path, status=status, user_id=self.user_id)
+            print("File written: "+path)
+        except:
+            print("Unsupported type of file")
+
+    def _open_file(self, path):
+        """ Abre el fichero especificado. Funcion de uso interno"""
+        return open(path,'r+b')

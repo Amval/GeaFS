@@ -11,7 +11,7 @@ USERNAME = "Alberto"
 # Try system Snapshot
 class ClientHandler(RegexMatchingEventHandler):
 	def __init__(self, fw_oplog, ow_oplog):
-		super(ClientHandler, self).__init__(ignore_regexes=[".*\.TMP",".*~.*",".*.crdownload"])
+		super(ClientHandler, self).__init__(ignore_regexes=[".*\.TMP",".*~.*",".*.crdownload",".*/\..*"])
 		self.sync_handler = sh.SyncHandler(USERNAME)
 		# 
 		self.fw_oplog = fw_oplog
@@ -31,6 +31,8 @@ class ClientHandler(RegexMatchingEventHandler):
 
 			else:
 				self.ow_oplog.remove(event.src_path)
+		#print("fw_oplog: {0}".format(self.fw_oplog))
+		#print("ow_oplog: {0}".format(self.ow_oplog))
 
 	def on_modified(self, event):
 		""" Procesa el evento de modificacion de un fichero en el cliente y lo escribe
@@ -42,6 +44,9 @@ class ClientHandler(RegexMatchingEventHandler):
 				self.fw_oplog.append(event.src_path)
 			else:
 				self.ow_oplog.remove(event.src_path)
+		print("fw_oplog: {0}".format(self.fw_oplog))
+		print("ow_oplog: {0}".format(self.ow_oplog))
+
 
 	def on_deleted(self, event):
 		""" Procesa el evento de borrado de un fichero o carpeta en el cliente y notifica

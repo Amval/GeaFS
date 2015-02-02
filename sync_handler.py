@@ -122,8 +122,6 @@ class SyncHandler (mh.MongoHandler):
 
 #sh = SyncHandler('Alberto')
 #sh._eliminate_all()
-#print(sh.list_client)
-#print(sh.server_list)
 #sh.compare_timestamps(list_client[0], myfile)
 #client_files = sh.server_side_sync()
 #sh.client_side_sync(client_files)
